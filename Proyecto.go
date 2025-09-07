@@ -578,6 +578,172 @@ func (listInstructions *instructions) executeProgram() error {
 				return fmt.Errorf("BINARY_MODULO\n %d: %v", idx, err)
 			}
 			stack.Push(okMod)
+		case "STORE_SUBSCR":
+			// Espera en la pila: [index, array, value] (value en el tope)
+			value, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("STORE_SUBSCR %d: %v", idx, err)
+			}
+			arrRaw, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("STORE_SUBSCR %d: %v", idx, err)
+			}
+			idxRaw, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("STORE_SUBSCR %d: %v", idx, err)
+			}
+			arr, ok := arrRaw.([]interface{})
+			if !ok {
+				return fmt.Errorf("STORE_SUBSCR %d: tipo de arreglo inválido: %T", idx, arrRaw)
+			}
+			// Convertir índice a int
+			var i int
+			switch v := idxRaw.(type) {
+			case int:
+				i = v
+			case float64:
+				i = int(v)
+			default:
+				return fmt.Errorf("STORE_SUBSCR %d: índice inválido de tipo %T", idx, idxRaw)
+			}
+			if i < 0 || i >= len(arr) {
+				return fmt.Errorf("STORE_SUBSCR %d: índice fuera de rango: %d", idx, i)
+			}
+			arr[i] = value
+
+		case "BINARY_SUBSCR":
+			// Espera en la pila: [index, array] (array en el tope)
+			arrRaw, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("BINARY_SUBSCR %d: %v", idx, err)
+			}
+			idxRaw, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("BINARY_SUBSCR %d: %v", idx, err)
+			}
+			arr, ok := arrRaw.([]interface{})
+			if !ok {
+				return fmt.Errorf("BINARY_SUBSCR %d: tipo de arreglo inválido: %T", idx, arrRaw)
+			}
+			var i int
+			switch v := idxRaw.(type) {
+			case int:
+				i = v
+			case float64:
+				i = int(v)
+			default:
+				return fmt.Errorf("BINARY_SUBSCR %d: índice inválido de tipo %T", idx, idxRaw)
+			}
+			if i < 0 || i >= len(arr) {
+				return fmt.Errorf("BINARY_SUBSCR %d: índice fuera de rango: %d", idx, i)
+			}
+			stack.Push(arr[i])
+
+		case "JUMP_ABSOLUTE":
+			// Nota: Para realizar el salto, ejecutamos recursivamente desde 'target'.
+			targetStr := strings.TrimSpace(operand)
+			target, err := strconv.Atoi(targetStr)
+			if err != nil {
+				return fmt.Errorf("JUMP_ABSOLUTE %d: target inválido: %v", idx, err)
+			}
+			// Buscar la posición 'pos' en el slice donde Index == target
+			pos := -1
+			for p := range *listInstructions {
+				if (*listInstructions)[p].Index == target {
+					pos = p
+					break
+				}
+			}
+			if pos == -1 {
+				return fmt.Errorf("JUMP_ABSOLUTE %d: target %d no encontrado", idx, target)
+			}
+			// Crear un subprograma desde 'pos' y ejecutarlo
+			sub := instructions((*listInstructions)[pos:])
+			return (&sub).executeProgram()
+
+		case "JUMP_IF_TRUE":
+			// Si el valor del tope es true, saltar a 'target'
+			val, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("JUMP_IF_TRUE %d: %v", idx, err)
+			}
+			b, ok := val.(bool)
+			if !ok {
+				return fmt.Errorf("JUMP_IF_TRUE %d: valor no booleano: %T", idx, val)
+			}
+			targetStr := strings.TrimSpace(operand)
+			target, err := strconv.Atoi(targetStr)
+			if err != nil {
+				return fmt.Errorf("JUMP_IF_TRUE %d: target inválido: %v", idx, err)
+			}
+			if b {
+				pos := -1
+				for p := range *listInstructions {
+					if (*listInstructions)[p].Index == target {
+						pos = p
+						break
+					}
+				}
+				if pos == -1 {
+					return fmt.Errorf("JUMP_IF_TRUE %d: target %d no encontrado", idx, target)
+				}
+				sub := instructions((*listInstructions)[pos:])
+				return (&sub).executeProgram()
+			}
+
+		case "JUMP_IF_FALSE":
+			// Si el valor del tope es false, saltar a 'target'
+			val, err := stack.Pop()
+			if err != nil {
+				return fmt.Errorf("JUMP_IF_FALSE %d: %v", idx, err)
+			}
+			b, ok := val.(bool)
+			if !ok {
+				return fmt.Errorf("JUMP_IF_FALSE %d: valor no booleano: %T", idx, val)
+			}
+			targetStr := strings.TrimSpace(operand)
+			target, err := strconv.Atoi(targetStr)
+			if err != nil {
+				return fmt.Errorf("JUMP_IF_FALSE %d: target inválido: %v", idx, err)
+			}
+			if !b {
+				pos := -1
+				for p := range *listInstructions {
+					if (*listInstructions)[p].Index == target {
+						pos = p
+						break
+					}
+				}
+				if pos == -1 {
+					return fmt.Errorf("JUMP_IF_FALSE %d: target %d no encontrado", idx, target)
+				}
+				sub := instructions((*listInstructions)[pos:])
+				return (&sub).executeProgram()
+			}
+
+		case "BUILD_LIST":
+			// Construye una lista con 'elements' elementos desde la pila
+			n, err := strconv.Atoi(strings.TrimSpace(operand))
+			if err != nil {
+				return fmt.Errorf("BUILD_LIST %d: parámetro inválido: %v", idx, err)
+			}
+			if n < 0 {
+				return fmt.Errorf("BUILD_LIST %d: cantidad negativa: %d", idx, n)
+			}
+			list := make([]interface{}, n)
+			for i := n - 1; i >= 0; i-- {
+				v, err := stack.Pop()
+				if err != nil {
+					return fmt.Errorf("BUILD_LIST %d: faltan elementos: %v", idx, err)
+				}
+				list[i] = v
+			}
+			stack.Push(list)
+
+		case "END":
+			// Termina la ejecución del programa
+			return nil
+
 		default:
 			return fmt.Errorf("Error en la linea %d:  funcion no existente", idx)
 		}
@@ -589,7 +755,7 @@ func (listInstructions *instructions) executeProgram() error {
 
 func main() {
 	//Se cargan las instrucciones en la lista listInstructions
-	err := listInstructions.readInstructions("archivo.txt")
+	err := listInstructions.readInstructions("archivo2.txt")
 	if err != nil {
 		fmt.Errorf("", err)
 	}
