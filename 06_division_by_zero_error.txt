@@ -1,0 +1,11 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0  LOAD_CONST 10                # pila -> [10]
+1  LOAD_CONST 0                 # pila -> [10,0]
+2  BINARY_DIVIDE                # ERROR: división entre cero -> el intérprete debe reportar error y detener.
+3  LOAD_GLOBAL print            # (no debería ejecutarse)
+4  CALL_FUNCTION 1              # (no debería ejecutarse)
+# Esperado: error (division by zero)

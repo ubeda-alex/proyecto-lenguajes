@@ -1,0 +1,46 @@
+# NOTA: pila [fondo ... tope]; tope a la DERECHA. Memoria: {nombre:valor}.
+
+0   LOAD_CONST 0
+1   STORE_FAST x
+2   LOAD_CONST 0
+3   LOAD_CONST 1
+4   LOAD_CONST 2
+5   LOAD_CONST 3
+6   LOAD_CONST 4
+7   LOAD_CONST 5
+8   LOAD_CONST 6
+9   LOAD_CONST 7
+10  LOAD_CONST 8
+11  LOAD_CONST 9
+12  BUILD_LIST 10
+13  STORE_FAST lista
+
+# while x < 10:
+14  LOAD_FAST  x               # pila: [x]
+15  LOAD_CONST 10              # pila: [x,10]
+16  COMPARE_OP <               # pila: [x<10] (bool)
+17  JUMP_IF_FALSE 34           # si false → END
+
+# if x % 2 == 0:
+18  LOAD_FAST  x               # pila: [x]
+19  LOAD_CONST 2               # pila: [x,2]
+20  BINARY_MODULO              # pila: [x%2]
+21  LOAD_CONST 0               # o 0.0 si tu % devuelve float64
+22  COMPARE_OP ==              # pila: [(x%2==0)] (bool)
+23  JUMP_IF_FALSE 29           # si false → salta al incremento
+
+# print(lista[x])
+24  LOAD_GLOBAL print          # pila: [<print>]
+25  LOAD_FAST  x               # pila: [<print>, x]
+26  LOAD_FAST  lista           # pila: [<print>, x, lista]
+27  BINARY_SUBSCR              # espera [índice, arreglo] con arreglo ARRIBA → pila: [<print>, lista[x]]
+28  CALL_FUNCTION 1            # imprime; pila: []
+
+# x = x + 1 ; repetir
+29  LOAD_FAST  x               # pila: [x]
+30  LOAD_CONST 1               # pila: [x,1]
+31  BINARY_ADD                 # pila: [x+1]
+32  STORE_FAST x               # mem: {x: x+1}; pila: []
+33  JUMP_ABSOLUTE 14           # volver a la condición
+
+34  END

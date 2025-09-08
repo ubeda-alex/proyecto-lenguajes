@@ -1,0 +1,18 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0  LOAD_CONST 2.5               # pila -> [2.5]
+1  LOAD_CONST 2.5               # pila -> [2.5,2.5]
+2  COMPARE_OP <                 # 2.5<2.5 -> False; pila -> [false]
+3  JUMP_IF_TRUE 8               # False -> NO salta
+4  LOAD_GLOBAL print            # pila -> [<print>]
+5  LOAD_CONST "false branch"    # pila -> [<print>, "false branch"]
+6  CALL_FUNCTION 1              # imprime "false branch"; pila -> []
+7  JUMP_ABSOLUTE 11             # salta al fin
+8  LOAD_GLOBAL print            # (no se ejecuta)
+9  LOAD_CONST "true branch"     # (no se ejecuta)
+10 CALL_FUNCTION 1              # (no se ejecuta)
+11 END
+# Esperado: false branch

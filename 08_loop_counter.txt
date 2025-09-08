@@ -1,0 +1,29 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+# i = 3
+0  LOAD_CONST 3                 # pila -> [3]
+1  STORE_FAST i                 # mem: {i:3}; pila -> []
+# while i > 0:
+2  LOAD_FAST i                  # pila -> [3]
+3  LOAD_CONST 0                 # pila -> [3,0]
+4  COMPARE_OP >                 # 3>0 True -> pila [true]
+5  JUMP_IF_FALSE 17             # True -> NO salta
+# print(3 - i)
+6  LOAD_GLOBAL print            # pila -> [<print>]
+7  LOAD_CONST 3                 # pila -> [<print>,3]
+8  LOAD_FAST i                  # pila -> [<print>,3,3]
+9  BINARY_SUBSTRACT             # 3-3=0; pila -> [<print>,0]
+10 CALL_FUNCTION 1              # imprime 0; pila -> []
+# i = i - 1
+11 LOAD_FAST i                  # pila -> [3]
+12 LOAD_CONST 1                 # pila -> [3,1]
+13 BINARY_SUBSTRACT             # 3-1=2; pila -> [2]
+14 STORE_FAST i                 # mem: {i:2}; pila -> []
+15 JUMP_ABSOLUTE 2              # vuelve a condición
+# Iteración 2: i=2 -> imprime 1
+# Iteración 3: i=1 -> imprime 2
+17 END
+# Esperado: 0, 1, 2 (cada uno en línea)

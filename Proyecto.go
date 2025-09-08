@@ -514,6 +514,21 @@ func (listInstructions *instructions) executeProgram() error {
 				return fmt.Errorf("BINARY_ADD %d: %v", idx, err)
 			}
 			stack.Push(okSum)
+
+		case "BINARY_DIVIDE":
+			oper1, err := stack.Pop() //Saca el primer operando
+			if err != nil {
+				return fmt.Errorf("BINARY_DIVIDE\n %d: %v", idx, err)
+			}
+			oper2, err := stack.Pop() //Saca el segundo operando
+			if err != nil {
+				return fmt.Errorf("BINARY_DIVIDE\n %d: %v", idx, err)
+			}
+			okDiv, err := applyGenericCalc("/", oper2, oper1)
+			if err != nil {
+				return fmt.Errorf("BINARY_DIVIDE\n %d: %v", idx, err)
+			}
+			stack.Push(okDiv)
 		case "BINARY_MULTIPLY":
 			oper1, err := stack.Pop() //Saca el primer operando
 			if err != nil {
@@ -529,41 +544,110 @@ func (listInstructions *instructions) executeProgram() error {
 			}
 			stack.Push(okSum)
 		case "BINARY_AND":
-			oper1, err := stack.Pop() //Saca el primer operando
+			// Pop right, then left (top of stack is right operand)
+			right, err := stack.Pop()
 			if err != nil {
-				return fmt.Errorf("BINARY_AND\n %d: %v", idx, err)
+				return fmt.Errorf("BINARY_AND %d: %v", idx, err)
 			}
-			oper2, err := stack.Pop() //Saca el segundo operando
+			left, err := stack.Pop()
 			if err != nil {
-				return fmt.Errorf("BINARY_AND\n %d: %v", idx, err)
+				return fmt.Errorf("BINARY_AND %d: %v", idx, err)
 			}
-			va := reflect.ValueOf(oper1)
-			vb := reflect.ValueOf(oper2)
+
+			va := reflect.ValueOf(left)
+			vb := reflect.ValueOf(right)
+
+			// bool & bool → bool (lógico AND)
 			if isBoolKind(va.Kind()) && isBoolKind(vb.Kind()) {
-				if !va.Bool() || !vb.Bool() {
-					stack.Push(false)
-				} else {
-					stack.Push(true)
-				}
+				stack.Push(va.Bool() && vb.Bool())
+				break
 			}
+
+			// Admite int-like y bool mezclados (bool como 0/1)
+			aOK := isIntKind(va.Kind()) || isBoolKind(va.Kind())
+			bOK := isIntKind(vb.Kind()) || isBoolKind(vb.Kind())
+			if aOK && bOK {
+				// Normalizamos a int64 para operar bit a bit
+				var ai, bi int64
+				if isIntKind(va.Kind()) {
+					ai = va.Int()
+				} else { // bool
+					if va.Bool() {
+						ai = 1
+					} else {
+						ai = 0
+					}
+				}
+				if isIntKind(vb.Kind()) {
+					bi = vb.Int()
+				} else { // bool
+					if vb.Bool() {
+						bi = 1
+					} else {
+						bi = 0
+					}
+				}
+
+				res := ai & bi
+
+				// Si ambos operandos eran bool, ya habríamos retornado arriba.
+				// Aquí devolvemos int (estilo Python cuando hay ints de por medio).
+				stack.Push(int(res))
+				break
+			}
+
+			return fmt.Errorf("BINARY_AND %d: tipos no soportados %T & %T", idx, left, right)
+
 		case "BINARY_OR":
-			oper1, err := stack.Pop() //Saca el primer operando
+			right, err := stack.Pop()
 			if err != nil {
-				return fmt.Errorf("BINARY_OR\n %d: %v", idx, err)
+				return fmt.Errorf("BINARY_OR %d: %v", idx, err)
 			}
-			oper2, err := stack.Pop() //Saca el segundo operando
+			left, err := stack.Pop()
 			if err != nil {
-				return fmt.Errorf("BINARY_OR\n %d: %v", idx, err)
+				return fmt.Errorf("BINARY_OR %d: %v", idx, err)
 			}
-			va := reflect.ValueOf(oper1)
-			vb := reflect.ValueOf(oper2)
+
+			va := reflect.ValueOf(left)
+			vb := reflect.ValueOf(right)
+
+			// bool | bool → bool (lógico OR)
 			if isBoolKind(va.Kind()) && isBoolKind(vb.Kind()) {
-				if va.Bool() || vb.Bool() {
-					stack.Push(true)
-				} else {
-					stack.Push(false)
-				}
+				stack.Push(va.Bool() || vb.Bool())
+				break
 			}
+
+			// Admite int-like y bool mezclados (bool como 0/1)
+			aOK := isIntKind(va.Kind()) || isBoolKind(va.Kind())
+			bOK := isIntKind(vb.Kind()) || isBoolKind(vb.Kind())
+			if aOK && bOK {
+				var ai, bi int64
+				if isIntKind(va.Kind()) {
+					ai = va.Int()
+				} else {
+					if va.Bool() {
+						ai = 1
+					} else {
+						ai = 0
+					}
+				}
+				if isIntKind(vb.Kind()) {
+					bi = vb.Int()
+				} else {
+					if vb.Bool() {
+						bi = 1
+					} else {
+						bi = 0
+					}
+				}
+
+				res := ai | bi
+				stack.Push(int(res))
+				break
+			}
+
+			return fmt.Errorf("BINARY_OR %d: tipos no soportados %T | %T", idx, left, right)
+
 		case "BINARY_MODULO":
 			oper1, err := stack.Pop() //Saca el primer operando
 			if err != nil {
@@ -658,7 +742,9 @@ func (listInstructions *instructions) executeProgram() error {
 				return fmt.Errorf("JUMP_ABSOLUTE %d: target %d no encontrado", idx, target)
 			}
 			// Crear un subprograma desde 'pos' y ejecutarlo
-			sub := instructions((*listInstructions)[pos:])
+			sub := make(instructions, 0, len(*listInstructions))
+			sub = append(sub, (*listInstructions)[pos:]...)
+			sub = append(sub, (*listInstructions)[:pos]...)
 			return (&sub).executeProgram()
 
 		case "JUMP_IF_TRUE":
@@ -687,8 +773,12 @@ func (listInstructions *instructions) executeProgram() error {
 				if pos == -1 {
 					return fmt.Errorf("JUMP_IF_TRUE %d: target %d no encontrado", idx, target)
 				}
-				sub := instructions((*listInstructions)[pos:])
+				// Rotar el programa: [pos:...] + [:pos]  (incluye TODO, no recorta)
+				sub := make(instructions, 0, len(*listInstructions))
+				sub = append(sub, (*listInstructions)[pos:]...)
+				sub = append(sub, (*listInstructions)[:pos]...)
 				return (&sub).executeProgram()
+
 			}
 
 		case "JUMP_IF_FALSE":
@@ -717,8 +807,12 @@ func (listInstructions *instructions) executeProgram() error {
 				if pos == -1 {
 					return fmt.Errorf("JUMP_IF_FALSE %d: target %d no encontrado", idx, target)
 				}
-				sub := instructions((*listInstructions)[pos:])
+				// Rotar el programa: [pos:...] + [:pos]  (incluye TODO, no recorta)
+				sub := make(instructions, 0, len(*listInstructions))
+				sub = append(sub, (*listInstructions)[pos:]...)
+				sub = append(sub, (*listInstructions)[:pos]...)
 				return (&sub).executeProgram()
+
 			}
 
 		case "BUILD_LIST":
@@ -755,7 +849,8 @@ func (listInstructions *instructions) executeProgram() error {
 
 func main() {
 	//Se cargan las instrucciones en la lista listInstructions
-	err := listInstructions.readInstructions("archivo2.txt")
+	//Acá se cambia el tipo de archivo dependiendo de la prueba que se quiera usar
+	err := listInstructions.readInstructions("08_loop_counter.txt")
 	if err != nil {
 		fmt.Errorf("", err)
 	}
@@ -766,6 +861,8 @@ func main() {
 
 	}
 	//Imprime el error si hay alguno con el código
-	fmt.Println(listInstructions.executeProgram())
+	if err := listInstructions.executeProgram(); err != nil {
+		fmt.Println("error:", err)
+	}
 
 }

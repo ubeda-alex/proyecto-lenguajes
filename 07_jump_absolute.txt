@@ -1,0 +1,16 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y el lector debe ignorarlas.
+
+0  LOAD_GLOBAL print            # pila -> [<print>]
+1  LOAD_CONST "A"               # pila -> [<print>, "A"]
+2  CALL_FUNCTION 1              # imprime A; pila -> []
+3  JUMP_ABSOLUTE 7              # salta a 7
+4  LOAD_GLOBAL print            # (omitido por el salto)
+5  LOAD_CONST "SHOULD_NOT_PRINT"
+6  CALL_FUNCTION 1
+7  LOAD_GLOBAL print            # pila -> [<print>]
+8  LOAD_CONST "B"               # pila -> [<print>, "B"]
+9  CALL_FUNCTION 1              # imprime B; pila -> []
+# Esperado: A luego B (sin SHOULD_NOT_PRINT)

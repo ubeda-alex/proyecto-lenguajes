@@ -1,0 +1,20 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0  LOAD_CONST 5                 # pila -> [5]
+1  STORE_FAST x                 # mem: {x:5}; pila -> []
+2  LOAD_CONST 7                 # pila -> [7]
+3  LOAD_FAST x                  # pila -> [7,5]
+4  BINARY_ADD                   # 12; pila -> [12]
+5  STORE_FAST x                 # mem: {x:12}; pila -> []
+6  LOAD_GLOBAL print            # pila -> [<print>]
+7  LOAD_FAST x                  # pila -> [<print>,12]
+8  CALL_FUNCTION 1              # imprime 12; pila -> []
+# Ahora imprimimos con dos argumentos para evitar FORMAT_VALUE
+9  LOAD_GLOBAL print            # pila -> [<print>]
+10 LOAD_CONST "items:"          # pila -> [<print>,"items:"]
+11 LOAD_FAST x                  # pila -> [<print>,"items:",12]
+12 CALL_FUNCTION 2              # imprime: items: 12
+# Esperado: primero 12; luego 'items: 12'

@@ -1,0 +1,11 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0 LOAD_GLOBAL print             # pila: [] -> [<print>]
+1 LOAD_CONST "Hola, "           # pila -> [<print>, "Hola, "]
+2 LOAD_CONST "Mundo"            # pila -> [<print>, "Hola, ", "Mundo"]
+3 BINARY_ADD                    # concat -> "Hola, Mundo"; pila -> [<print>, "Hola, Mundo"]
+4 CALL_FUNCTION 1               # imprime "Hola, Mundo"; pila -> []
+# Esperado: Hola, Mundo

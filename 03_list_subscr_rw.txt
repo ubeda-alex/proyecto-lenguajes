@@ -1,0 +1,22 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0   LOAD_CONST 1                # pila -> [1]
+1   LOAD_CONST 2                # pila -> [1,2]
+2   LOAD_CONST 3                # pila -> [1,2,3]
+3   BUILD_LIST 3                # pila -> [[1,2,3]]
+4   STORE_FAST arr              # mem: {arr:[1,2,3]}; pila -> []
+5   LOAD_CONST 0                # pila -> [0]
+6   LOAD_FAST arr               # pila -> [0, [1,2,3]]
+7   LOAD_CONST 99               # pila -> [0, [1,2,3], 99]
+8   STORE_SUBSCR                # arr[0]=99; mem: {arr:[99,2,3]}; pila -> []
+9   LOAD_CONST 0                # pila -> [0]
+10  LOAD_FAST arr               # pila -> [0, [99,2,3]]
+11  BINARY_SUBSCR               # arr[0]=99; pila -> [99]
+12  STORE_FAST first            # mem: {arr:[99,2,3], first:99}; pila -> []
+13  LOAD_GLOBAL print           # pila -> [<print>]
+14  LOAD_FAST first             # pila -> [<print>, 99]
+15  CALL_FUNCTION 1             # imprime 99; pila -> []
+# Esperado: 99

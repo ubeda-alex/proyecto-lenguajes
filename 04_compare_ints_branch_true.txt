@@ -1,0 +1,19 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+
+0  LOAD_CONST 10                # pila: [] -> [10]
+1  LOAD_CONST 3                 # pila: [10] -> [10, 3]
+2  COMPARE_OP >                 # compara 10 > 3 -> True; pila: [10, 3] -> [true]
+3  JUMP_IF_FALSE 9              # mira tope: true -> NO salta; pila tras consumir: [] (si tu JUMP_IF_FALSE consume el valor)
+4  LOAD_GLOBAL print            # pila: [] -> [<print>]
+5  LOAD_CONST "mayor"           # pila: [<print>] -> [<print>, "mayor"]
+6  CALL_FUNCTION 1              # imprime "mayor"; consume "mayor" y <print>; pila: []
+7  JUMP_ABSOLUTE 11             # salta a la instrucción 11
+8  LOAD_GLOBAL print            # (no se ejecuta)
+9  LOAD_CONST "no mayor"        # (no se ejecuta)
+10 CALL_FUNCTION 1              # (no se ejecuta)
+11 END
+
+# Esperado: mayor
