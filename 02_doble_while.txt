@@ -1,0 +1,63 @@
+# i = 0
+0   LOAD_CONST 0                # pila: [] -> [0]
+1   STORE_FAST i                # mem: {i:0}; pila -> []
+
+# while i < 3:
+4   LOAD_FAST  i                # pila: [] -> [0]
+5   LOAD_CONST 3                # pila: [0] -> [0,3]
+6   COMPARE_OP <                # 0<3 -> true; pila: [true]
+7   JUMP_IF_FALSE 48            # true -> NO salta; (consume bool) pila: []
+
+# j = 0
+8   LOAD_CONST 0                # pila: [] -> [0]
+9   STORE_FAST j                # mem: {i:0, j:0}; pila -> []
+
+# while j < 3:
+10  LOAD_FAST  j                # pila: [] -> [0]
+11  LOAD_CONST 3                # pila: [0] -> [0,3]
+12  COMPARE_OP <                # 0<3 -> true; pila: [true]
+13  JUMP_IF_FALSE 40            # true -> NO salta; (consume bool) pila: []
+
+# if (i + j) % 2 == 0:
+14  LOAD_FAST  i                # pila: [] -> [0]
+15  LOAD_FAST  j                # pila: [0] -> [0,0]
+16  BINARY_ADD                  # 0+0 -> 0; pila: [0]
+17  LOAD_CONST 2                # pila: [0] -> [0,2]
+18  BINARY_MODULO               # 0%2 -> 0; pila: [0]
+19  LOAD_CONST 0                # pila: [0] -> [0,0]
+20  COMPARE_OP ==               # 0==0 -> true; pila: [true]
+21  JUMP_IF_FALSE 28            # true -> NO salta; (consume bool) pila: []
+
+# print(i, j)
+22  LOAD_GLOBAL print           # pila: [] -> [<print>]
+23  LOAD_FAST  i                # pila: [<print>] -> [<print>, 0]
+24  LOAD_FAST  j                # pila: [<print>,0] -> [<print>, 0, 0]
+25  CALL_FUNCTION 2             # imprime "0 0"; pila -> []
+
+# j = j + 1 ; volver al while interno
+28  LOAD_FAST  j                # pila: [] -> [0]
+29  LOAD_CONST 1                # pila: [0] -> [0,1]
+30  BINARY_ADD                  # 0+1 -> 1; pila: [1]
+31  STORE_FAST j                # mem: {i:0, j:1}; pila -> []
+32  JUMP_ABSOLUTE 10            # vuelve a evaluar "j < 3"
+
+# ... (el bloque 10..32 se repite mientras j < 3)
+
+# fin del while interno; i = i + 1 ; volver al while externo
+40  LOAD_FAST  i                # (se ejecuta cuando j>=3) pila: [] -> [0]
+41  LOAD_CONST 1                # pila: [0] -> [0,1]
+42  BINARY_ADD                  # 0+1 -> 1; pila: [1]
+43  STORE_FAST i                # mem: {i:1, j:3}; pila -> []
+44  JUMP_ABSOLUTE 4             # vuelve a evaluar "i < 3"
+
+# ... (el bloque 4..44 se repite mientras i < 3)
+
+48  END                         # termina el programa
+
+#SALIDA ESPERADA:
+#0 0
+#0 2
+#1 1
+#2 0
+#2 2
+

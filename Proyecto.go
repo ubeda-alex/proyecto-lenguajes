@@ -841,8 +841,8 @@ func (listInstructions *instructions) executeProgram() error {
 		default:
 			return fmt.Errorf("Error en la linea %d:  funcion no existente", idx)
 		}
-		fmt.Println(stack)
-		fmt.Println(MEMORY)
+		//fmt.Println(stack)
+		//fmt.Println(MEMORY)
 	}
 	return nil
 }
@@ -850,7 +850,7 @@ func (listInstructions *instructions) executeProgram() error {
 func main() {
 	//Se cargan las instrucciones en la lista listInstructions
 	//Acá se cambia el tipo de archivo dependiendo de la prueba que se quiera usar
-	err := listInstructions.readInstructions("08_loop_counter.txt")
+	err := listInstructions.readInstructions("01_arith_chain.txt")
 	if err != nil {
 		fmt.Errorf("", err)
 	}

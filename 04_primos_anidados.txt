@@ -1,0 +1,72 @@
+# n = 2 ; N = 10
+0   LOAD_CONST 2                # pila: [2]
+1   STORE_FAST n                # mem: {n:2}; pila: []
+2   LOAD_CONST 10               # pila: [10]
+3   STORE_FAST N                # mem: {n:2, N:10}; pila: []
+
+# ---- outer_test: while n <= N ----
+4   LOAD_FAST  n                # pila: [n]
+5   LOAD_FAST  N                # pila: [n, N]
+6   COMPARE_OP <=               # pila: [n<=N] (bool)
+7   JUMP_IF_FALSE 64            # si false → END; consume bool
+
+# isP = True (suponemos primo hasta probar lo contrario)
+8   LOAD_CONST True             # pila: [true]
+9   STORE_FAST isP              # mem: {..., isP:true}; pila: []
+
+# d = 2 (primer divisor candidato)
+10  LOAD_CONST 2                # pila: [2]
+11  STORE_FAST d                # mem: {..., d:2}; pila: []
+
+# ---- inner_test: while d*d <= n ----
+12  LOAD_FAST  d                # pila: [d]
+13  LOAD_FAST  d                # pila: [d, d]
+14  BINARY_MULTIPLY             # pila: [d*d]
+15  LOAD_FAST  n                # pila: [d*d, n]
+16  COMPARE_OP <=               # pila: [d*d <= n] (bool)
+17  JUMP_IF_FALSE 33            # si false → salir inner; consume bool
+
+# if n % d == 0:
+18  LOAD_FAST  n                # pila: [n]
+19  LOAD_FAST  d                # pila: [n, d]
+20  BINARY_MODULO               # pila: [n%d]
+21  LOAD_CONST 0                # pila: [n%d, 0]
+22  COMPARE_OP ==               # pila: [n%d==0] (bool)
+23  JUMP_IF_FALSE 27            # si false → no divisible, ir a d=d+1; consume bool
+
+# divisible → isP = False; break (salto al final del inner)
+24  LOAD_CONST False            # pila: [false]
+25  STORE_FAST isP              # mem: {..., isP:false}; pila: []
+26  JUMP_ABSOLUTE 33            # romper inner
+
+# no divisible → d = d + 1 ; volver a inner_test
+27  LOAD_FAST  d                # pila: [d]
+28  LOAD_CONST 1                # pila: [d,1]
+29  BINARY_ADD                  # pila: [d+1]
+30  STORE_FAST d                # mem: {..., d:=d+1}; pila: []
+31  JUMP_ABSOLUTE 12            # repetir inner_test
+
+# ---- inner_end ----
+33  LOAD_FAST  isP              # pila: [isP]
+34  JUMP_IF_FALSE 44            # si no es primo → saltar impresión; consume bool
+
+# print(n) si primo
+35  LOAD_GLOBAL print           # pila: [<print>]
+36  LOAD_FAST  n                # pila: [<print>, n]
+37  CALL_FUNCTION 1             # imprime n; pila: []
+
+# n = n + 1 ; volver a outer_test
+44  LOAD_FAST  n                # pila: [n]
+45  LOAD_CONST 1                # pila: [n,1]
+46  BINARY_ADD                  # pila: [n+1]
+47  STORE_FAST n                # mem: {..., n:=n+1}; pila: []
+48  JUMP_ABSOLUTE 4             # repetir outer_test
+
+# ---- end ----
+64  END
+
+#SALIDA ESPERADA
+#2
+#3
+#5
+#7

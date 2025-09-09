@@ -1,0 +1,114 @@
+# NOTA:
+# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
+# - La memoria es un diccionario {nombre: valor}.
+# - Tu lector ignora líneas que empiezan con '#'.
+
+# --- Construir filas [0,0,0] ---
+0   LOAD_CONST 0                # pila: [0]
+1   LOAD_CONST 0                # pila: [0,0]
+2   LOAD_CONST 0                # pila: [0,0,0]
+3   BUILD_LIST 3                # pila: [[0,0,0]]
+4   STORE_FAST row0             # mem: {row0:[0,0,0]}; pila: []
+
+5   LOAD_CONST 0
+6   LOAD_CONST 0
+7   LOAD_CONST 0
+8   BUILD_LIST 3
+9   STORE_FAST row1             # mem: {row0:[0,0,0], row1:[0,0,0]}
+
+10  LOAD_CONST 0
+11  LOAD_CONST 0
+12  LOAD_CONST 0
+13  BUILD_LIST 3
+14  STORE_FAST row2             # mem: {..., row2:[0,0,0]}
+
+# --- M = [row0, row1, row2] ---
+15  LOAD_FAST  row0             # pila: [row0]
+16  LOAD_FAST  row1             # pila: [row0,row1]
+17  LOAD_FAST  row2             # pila: [row0,row1,row2]
+18  BUILD_LIST 3                # pila: [[row0,row1,row2]]
+19  STORE_FAST M                # mem: {..., M:[[0,0,0],[0,0,0],[0,0,0]]}; pila: []
+
+# k = 0
+20  LOAD_CONST 0
+21  STORE_FAST k                # mem: {..., k:0}
+
+# while k < 3:
+22  LOAD_FAST  k                # pila: [0]
+23  LOAD_CONST 3                # pila: [0,3]
+24  COMPARE_OP <                # pila: [true]
+25  JUMP_IF_FALSE 61            # true → NO salta; pila: []
+
+# row = M[k]
+26  LOAD_FAST  k                # pila: [k]
+27  LOAD_FAST  M                # pila: [k, M]
+28  BINARY_SUBSCR               # espera [índice, arreglo] con arreglo ARRIBA → pila: [M[k]]
+29  STORE_FAST row              # mem: {..., row: referencia a fila k}; pila: []
+
+# row[k] = 1    (STORE_SUBSCR: [índice, arreglo, valor])
+30  LOAD_FAST  k                # pila: [k]
+31  LOAD_FAST  row              # pila: [k, row]
+32  LOAD_CONST 1                # pila: [k, row, 1]
+33  STORE_SUBSCR                # row[k] = 1; actualiza M in-place
+
+# k = k + 1 ; repetir while
+34  LOAD_FAST  k                # pila: [k]
+35  LOAD_CONST 1                # pila: [k,1]
+36  BINARY_ADD                  # pila: [k+1]
+37  STORE_FAST k                # mem: {..., k:=k+1}; pila: []
+38  JUMP_ABSOLUTE 22            # vuelve a probar k < 3
+
+# --- Post: imprimir diagonal ---
+61  LOAD_GLOBAL print
+62  LOAD_CONST "diag:"
+63  CALL_FUNCTION 1             # imprime encabezado; pila: []
+
+# print(M[0][0])
+64  LOAD_CONST 0                # pila: [0]
+65  LOAD_FAST  M                # pila: [0, M]
+66  BINARY_SUBSCR               # pila: [M[0]]
+67  STORE_FAST row              # row = M[0]
+68  LOAD_CONST 0                # pila: [0]
+69  LOAD_FAST  row              # pila: [0, row]
+70  BINARY_SUBSCR               # pila: [row[0]]
+71  STORE_FAST tmp              # tmp = row[0]
+72  LOAD_GLOBAL print           # pila: [<print>]
+73  LOAD_FAST  tmp              # pila: [<print>, tmp]
+74  CALL_FUNCTION 1             # imprime row[0]
+
+# print(M[1][1])
+75  LOAD_CONST 1
+76  LOAD_FAST  M
+77  BINARY_SUBSCR               # pila: [M[1]]
+78  STORE_FAST row
+79  LOAD_CONST 1
+80  LOAD_FAST  row
+81  BINARY_SUBSCR               # pila: [row[1]]
+82  STORE_FAST tmp
+83  LOAD_GLOBAL print
+84  LOAD_FAST  tmp
+85  CALL_FUNCTION 1             # imprime row[1]
+
+# print(M[2][2])
+86  LOAD_CONST 2
+87  LOAD_FAST  M
+88  BINARY_SUBSCR               # pila: [M[2]]
+89  STORE_FAST row
+90  LOAD_CONST 2
+91  LOAD_FAST  row
+92  BINARY_SUBSCR               # pila: [row[2]]
+93  STORE_FAST tmp
+94  LOAD_GLOBAL print
+95  LOAD_FAST  tmp
+96  CALL_FUNCTION 1             # imprime row[2]
+
+97  END
+
+
+
+#SALIDA ESPERADA:
+#diag:
+#1
+#1
+#1
+

@@ -1,20 +1,301 @@
-# NOTA:
-# - La pila se muestra como [fondo ... tope]; el tope está a la DERECHA.
-# - La memoria es un diccionario {nombre: valor}.
-# - Las líneas que empiezan con '#' son comentarios y tu lector debe ignorarlas.
+# Construir matriz 5x5, rellenar 1..25, marcar múltiplos de 3 con -1,
+# y calcular sumas/contadores.
 
-0  LOAD_GLOBAL    print         # pila: [] -> ['<func print>']
-# pila: [<print>]; mem: {}
-1  LOAD_CONST 7                 # pila: [<print>] -> [<print>, 7]
-2  LOAD_CONST 3                 # pila: [<print>, 7] -> [<print>, 7, 3]
-3  BINARY_ADD                   # 7+3=10; pila -> [<print>, 10]
-4  LOAD_CONST 2.0               # pila -> [<print>, 10, 2]
-5  BINARY_MULTIPLY              # 10*2.0=20; pila -> [<print>, 20]
-6  LOAD_CONST 8                 # pila -> [<print>, 20, 8]
-7  BINARY_SUBSTRACT             # 20-8=12; pila -> [<print>, 12]
-8  LOAD_CONST 5                 # pila -> [<print>, 12, 5]
-9  LOAD_CONST 3                 # pila -> [<print>, 12, 5, 3]
-10 BINARY_MODULO                # 5%3=2; pila -> [<print>, 12, 2]
-11 BINARY_DIVIDE                # 12/2=6; pila -> [<print>, 6]
-12 CALL_FUNCTION 1              # imprime 6; pila -> []
-# Esperado: 6 o 6.0
+# ---- Init contadores ----
+0   LOAD_CONST 0
+1   STORE_FAST i
+2   LOAD_CONST 0
+3   STORE_FAST j
+4   LOAD_CONST 0
+5   STORE_FAST sumT
+6   LOAD_CONST 0
+7   STORE_FAST sumEven
+8   LOAD_CONST 0
+9   STORE_FAST sumOdd
+10  LOAD_CONST 0
+11  STORE_FAST cntPrime
+12  LOAD_CONST 0
+13  STORE_FAST cntSpecial
+
+# ---- Filas [0,0,0,0,0] ----
+14  LOAD_CONST 0
+15  LOAD_CONST 0
+16  LOAD_CONST 0
+17  LOAD_CONST 0
+18  LOAD_CONST 0
+19  BUILD_LIST 5
+20  STORE_FAST row0
+
+21  LOAD_CONST 0
+22  LOAD_CONST 0
+23  LOAD_CONST 0
+24  LOAD_CONST 0
+25  LOAD_CONST 0
+26  BUILD_LIST 5
+27  STORE_FAST row1
+
+28  LOAD_CONST 0
+29  LOAD_CONST 0
+30  LOAD_CONST 0
+31  LOAD_CONST 0
+32  LOAD_CONST 0
+33  BUILD_LIST 5
+34  STORE_FAST row2
+
+35  LOAD_CONST 0
+36  LOAD_CONST 0
+37  LOAD_CONST 0
+38  LOAD_CONST 0
+39  LOAD_CONST 0
+40  BUILD_LIST 5
+41  STORE_FAST row3
+
+42  LOAD_CONST 0
+43  LOAD_CONST 0
+44  LOAD_CONST 0
+45  LOAD_CONST 0
+46  LOAD_CONST 0
+47  BUILD_LIST 5
+48  STORE_FAST row4
+
+# M = [row0,row1,row2,row3,row4]
+49  LOAD_FAST  row0
+50  LOAD_FAST  row1
+51  LOAD_FAST  row2
+52  LOAD_FAST  row3
+53  LOAD_FAST  row4
+54  BUILD_LIST 5
+55  STORE_FAST M
+
+# n = 1
+56  LOAD_CONST 1
+57  STORE_FAST n
+
+# ---- while i < 5 ----
+58  LOAD_FAST  i
+59  LOAD_CONST 5
+60  COMPARE_OP <
+61  JUMP_IF_FALSE 220
+
+# j = 0 ; row = M[i]
+62  LOAD_CONST 0
+63  STORE_FAST j
+64  LOAD_FAST  i
+65  LOAD_FAST  M
+66  BINARY_SUBSCR
+67  STORE_FAST row
+
+# ---- while j < 5 ----
+68  LOAD_FAST  j
+69  LOAD_CONST 5
+70  COMPARE_OP <
+71  JUMP_IF_FALSE 200
+
+# val = n
+72  LOAD_FAST  n
+73  STORE_FAST val
+
+# row[j] = val        (STORE_SUBSCR: [idx, arr, val])
+74  LOAD_FAST  j
+75  LOAD_FAST  row
+76  LOAD_FAST  val
+77  STORE_SUBSCR
+
+# sumT += val
+78  LOAD_FAST  sumT
+79  LOAD_FAST  val
+80  BINARY_ADD
+81  STORE_FAST sumT
+
+# if val % 2 == 0: sumEven += val else: sumOdd += val
+82  LOAD_FAST  val
+83  LOAD_CONST 2
+84  BINARY_MODULO
+85  LOAD_CONST 0
+86  COMPARE_OP ==
+87  JUMP_IF_FALSE 95
+88  LOAD_FAST  sumEven
+89  LOAD_FAST  val
+90  BINARY_ADD
+91  STORE_FAST sumEven
+92  JUMP_ABSOLUTE 99
+95  LOAD_FAST  sumOdd
+96  LOAD_FAST  val
+97  BINARY_ADD
+98  STORE_FAST sumOdd
+
+# if (val % 2 == 0) OR (val % 5 == 0): cntSpecial++
+99  LOAD_FAST  val
+100 LOAD_CONST 2
+101 BINARY_MODULO
+102 LOAD_CONST 0
+103 COMPARE_OP ==
+104 LOAD_FAST  val
+105 LOAD_CONST 5
+106 BINARY_MODULO
+107 LOAD_CONST 0
+108 COMPARE_OP ==
+109 BINARY_OR
+110 JUMP_IF_FALSE 116
+111 LOAD_FAST  cntSpecial
+112 LOAD_CONST 1
+113 BINARY_ADD
+114 STORE_FAST cntSpecial
+115 JUMP_ABSOLUTE 116
+
+# primalidad básica: isP=True; d=2; while d*d<=val: if val%d==0 → isP=False; break
+116 LOAD_CONST True
+117 STORE_FAST isP
+118 LOAD_CONST 2
+119 STORE_FAST d
+
+120 LOAD_FAST  d
+121 LOAD_FAST  d
+122 BINARY_MULTIPLY
+123 LOAD_FAST  val
+124 COMPARE_OP <=
+125 JUMP_IF_FALSE 146
+
+126 LOAD_FAST  val
+127 LOAD_FAST  d
+128 BINARY_MODULO
+129 LOAD_CONST 0
+130 COMPARE_OP ==
+131 JUMP_IF_FALSE 136
+132 LOAD_CONST False
+133 STORE_FAST isP
+134 JUMP_ABSOLUTE 146
+136 LOAD_FAST  d
+137 LOAD_CONST 1
+138 BINARY_ADD
+139 STORE_FAST d
+140 JUMP_ABSOLUTE 120
+
+# if (isP AND val>1): cntPrime++
+146 LOAD_FAST  isP
+147 LOAD_FAST  val
+148 LOAD_CONST 1
+149 COMPARE_OP >
+150 BINARY_AND
+151 JUMP_IF_TRUE 156
+152 JUMP_ABSOLUTE 161
+156 LOAD_FAST  cntPrime
+157 LOAD_CONST 1
+158 BINARY_ADD
+159 STORE_FAST cntPrime
+
+# si val % 3 == 0 → row[j] = -1
+161 LOAD_FAST  val
+162 LOAD_CONST 3
+163 BINARY_MODULO
+164 LOAD_CONST 0
+165 COMPARE_OP ==
+166 JUMP_IF_FALSE 172
+167 LOAD_FAST  j
+168 LOAD_FAST  row
+169 LOAD_CONST -1
+170 STORE_SUBSCR
+171 JUMP_ABSOLUTE 172
+
+# n++, j++
+172 LOAD_FAST  n
+173 LOAD_CONST 1
+174 BINARY_ADD
+175 STORE_FAST n
+
+176 LOAD_FAST  j
+177 LOAD_CONST 1
+178 BINARY_ADD
+179 STORE_FAST j
+180 JUMP_ABSOLUTE 68
+
+# ---- fin while j ----
+200 LOAD_FAST  i
+201 LOAD_CONST 1
+202 BINARY_ADD
+203 STORE_FAST i
+204 JUMP_ABSOLUTE 58
+
+# ---- fin while i ----
+220 LOAD_FAST  sumT
+221 LOAD_CONST 25
+222 BINARY_DIVIDE
+223 STORE_FAST avg
+
+224 LOAD_FAST  sumEven
+225 LOAD_FAST  sumOdd
+226 BINARY_SUBSTRACT
+227 STORE_FAST diff
+
+# ---- prints de resultados ----
+228 LOAD_GLOBAL print
+229 LOAD_CONST "sumTotal"
+230 LOAD_FAST  sumT
+231 CALL_FUNCTION 2
+
+232 LOAD_GLOBAL print
+233 LOAD_CONST "sumEven"
+234 LOAD_FAST  sumEven
+235 CALL_FUNCTION 2
+
+236 LOAD_GLOBAL print
+237 LOAD_CONST "sumOdd"
+238 LOAD_FAST  sumOdd
+239 CALL_FUNCTION 2
+
+240 LOAD_GLOBAL print
+241 LOAD_CONST "cntPrime"
+242 LOAD_FAST  cntPrime
+243 CALL_FUNCTION 2
+
+244 LOAD_GLOBAL print
+245 LOAD_CONST "cntSpecial"
+246 LOAD_FAST  cntSpecial
+247 CALL_FUNCTION 2
+
+248 LOAD_GLOBAL print
+249 LOAD_CONST "avg"
+250 LOAD_FAST  avg
+251 CALL_FUNCTION 2
+
+252 LOAD_GLOBAL print
+253 LOAD_CONST "diffEvenMinusOdd"
+254 LOAD_FAST  diff
+255 CALL_FUNCTION 2
+
+# Imprimir filas finales
+256 LOAD_GLOBAL print
+257 LOAD_FAST  row0
+258 CALL_FUNCTION 1
+
+259 LOAD_GLOBAL print
+260 LOAD_FAST  row1
+261 CALL_FUNCTION 1
+
+262 LOAD_GLOBAL print
+263 LOAD_FAST  row2
+264 CALL_FUNCTION 1
+
+265 LOAD_GLOBAL print
+266 LOAD_FAST  row3
+267 CALL_FUNCTION 1
+
+268 LOAD_GLOBAL print
+269 LOAD_FAST  row4
+270 CALL_FUNCTION 1
+
+271 END
+#SALIDA ESPERADA
+# sumTotal 325
+# sumEven 156
+# sumOdd 169
+# cntPrime 9
+# cntSpecial 14
+# avg 13.0
+# diffEvenMinusOdd -13
+# [1, 2, -1, 4, 5]
+# [-1, 7, 8, -1, 10]
+# [11, -1, 13, 14, -1]
+# [16, 17, -1, 19, 20]
+# [-1, 22, 23, -1, 25]
+
