@@ -850,16 +850,27 @@ func (listInstructions *instructions) executeProgram() error {
 func main() {
 	//Se cargan las instrucciones en la lista listInstructions
 	//Acá se cambia el tipo de archivo dependiendo de la prueba que se quiera usar
-	err := listInstructions.readInstructions("01_arith_chain.txt")
+	// Verificar que se pase al menos un argumento (el nombre del archivo)
+	if len(os.Args) < 2 {
+		fmt.Println("Uso: mi_interprete <archivo.txt>")
+		return
+	}
+
+	// El primer argumento después del nombre del programa es el archivo
+	fileName := os.Args[1]
+
+	// Se cargan las instrucciones
+	err := listInstructions.readInstructions(fileName)
 	if err != nil {
-		fmt.Errorf("", err)
+		fmt.Println("error leyendo instrucciones:", err)
+		return
 	}
 
 	// Se muestran las instrucciones cargadas"
-	for _, ins := range listInstructions {
+	/*for _, ins := range listInstructions {
 		fmt.Printf("%d\t%s\t%s\n", ins.Index, ins.Operation, ins.Operand)
 
-	}
+	}*/
 	//Imprime el error si hay alguno con el código
 	if err := listInstructions.executeProgram(); err != nil {
 		fmt.Println("error:", err)
